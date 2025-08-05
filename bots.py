@@ -116,8 +116,8 @@ class PlayerBot(Bot):
         if keys[pygame.K_DOWN]:  ay += C.MOVE_ACC
         self.vel.x += ax * (dt_ms/1000.0)
         self.vel.y += ay * (dt_ms/1000.0)
-        if keys[pygame.K_a]: self.heading_deg = (self.heading_deg + C.TURN_DEG) % 360
-        if keys[pygame.K_d]: self.heading_deg = (self.heading_deg - C.TURN_DEG) % 360
+        if self.vel.length_squared() > 0:
+            self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
         # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
@@ -132,8 +132,8 @@ class Player2Bot(Bot):
         if keys[pygame.K_k]: ay += C.MOVE_ACC
         self.vel.x += ax * (dt_ms/1000.0)
         self.vel.y += ay * (dt_ms/1000.0)
-        if keys[pygame.K_q]: self.heading_deg = (self.heading_deg + C.TURN_DEG) % 360
-        if keys[pygame.K_e]: self.heading_deg = (self.heading_deg - C.TURN_DEG) % 360
+        if self.vel.length_squared() > 0:
+            self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
         # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
