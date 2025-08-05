@@ -14,7 +14,7 @@ BOT_RADIUS  = 18         # px
 # ── Escala real/virtual y sonido ─────────────────────────────────
 PX_PER_CM      = 4                       # 1 cm → 4 px
 V_SOUND_CMMS   = 34.3                    # velocidad sonido (cm ms-1)
-WAVE_SPEED_PX_MS = (V_SOUND_CMMS / 1000) * PX_PER_CM  # ≃ 0.137 px ms-1
+WAVE_SPEED_PX_MS = (V_SOUND_CMMS / 100) * PX_PER_CM   # ≃ 1.37 px ms-1
 
 # ── Movimiento ──────────────────────────────────────────────────
 TURN_DEG            = 4          # giro jugador (° frame-1)
