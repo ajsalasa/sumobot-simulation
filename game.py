@@ -74,14 +74,46 @@ class SumoSensorsGame:
                             pygame.Rect(centre[0]-r, centre[1]-r, r*2, r*2),
                             arc-half, arc+half, 2)
 
+    def _draw_hud(self, bot, opponent, align_left=True):
+        """Renderiza fórmulas e información de sensores para un bot."""
+        dist_px, _, _ = bot._compute_ping_hit(opponent)
+        dist_cm = dist_px / C.PX_PER_CM
+        tof_ms  = (2 * dist_cm) / C.V_SOUND_CMMS
+        ax, ay  = bot.accel
+        amag    = math.hypot(ax, ay)
+
+        lines = [
+            "Ultrasonido:",
+            "d = (v · t) / 2",
+            f"v = {C.V_SOUND_CMMS/100:.0f} m/s",
+            f"t = {tof_ms:6.2f} ms",
+            f"d = {dist_cm:6.1f} cm",
+            "",
+            "Acelerómetro:",
+            "a = Δv / Δt",
+            f"ax = {ax:6.2f} m/s²",
+            f"ay = {ay:6.2f} m/s²",
+            f"|a| = {amag:6.2f} m/s²",
+            f"|a| = {amag/C.G_MSS:5.2f} g",
+        ]
+
+        for i, line in enumerate(lines):
+            txt = SMALL.render(line, True, C.TXT_C)
+            if align_left:
+                pos = (10, 10 + i*18)
+            else:
+                pos = (C.SCREEN_W - 10 - txt.get_width(), 10 + i*18)
+            self.scr.blit(txt, pos)
+
     # ── draw modos ───────────────────────────────────────────────
     def draw_game(self, now):
         self.scr.fill(C.GREY_BG); self._ring()
         for b in (self.player, self.opponent):
             self._draw_bot(b); self._draw_pings(b)
 
-        # Acelerómetros & HUD (igual que antes, omito por brevedad)
-        # ...
+        # HUD de sensores para ambos bots
+        self._draw_hud(self.player, self.opponent, align_left=True)
+        self._draw_hud(self.opponent, self.player, align_left=False)
 
         help1 = "ESC salir  |  R reiniciar  |  TAB CPU/2P  |  T replay  |  C CSV"
         self.scr.blit(SMALL.render(help1, True, C.TXT_C), (10, C.SCREEN_H-40))
