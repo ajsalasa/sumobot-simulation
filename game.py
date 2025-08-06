@@ -31,10 +31,12 @@ class SumoSensorsGame:
         """Reinicia la partida creando bots nuevos y limpiando estados."""
         self.player = B.PlayerBot((C.CENTER[0]-120, C.CENTER[1]), C.PLAYER_C)
         self.player.heading_deg = 0
+        self.player.prev_heading = 0
         self.opponent = (B.Player2Bot if self.two_players else B.CpuBot)(
             (C.CENTER[0]+120, C.CENTER[1]),
             C.P2_C if self.two_players else C.CPU_C)
         self.opponent.heading_deg = 180
+        self.opponent.prev_heading = 180
         self.game_over = False
         self.winner    = ""
         self.replay_mode = False
@@ -137,6 +139,10 @@ class SumoSensorsGame:
             f"ay = {ay:6.2f} m/s²",
             f"|a| = {amag:6.2f} m/s²",
             f"|a| = {amag/C.G_MSS:5.2f} g",
+            "",
+            "Velocidad angular:",
+            "ω = Δθ/Δt",
+            f"ω = {bot.ang_vel:6.2f} °/s",
         ]
 
         for i, line in enumerate(lines):

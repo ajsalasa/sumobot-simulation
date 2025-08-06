@@ -19,6 +19,7 @@ class Recorder:
             "p2x": p2.pos.x, "p2y": p2.pos.y, "p2h": p2.heading_deg,
             "p1ax": p1.accel[0], "p1ay": p1.accel[1],
             "p2ax": p2.accel[0], "p2ay": p2.accel[1],
+            "p1w": p1.ang_vel, "p2w": p2.ang_vel,
         })
         if len(self.frames) > self.max_frames:
             self.frames.pop(0)
