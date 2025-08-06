@@ -98,8 +98,13 @@ class SumoSensorsGame:
         tof_ms  = (2 * dist_cm) / C.V_SOUND_CMMS
         ax, ay  = bot.accel
         amag    = math.hypot(ax, ay)
+        edge_d  = bot.edge_distance()
 
         lines = [
+            "Sensor de línea:",
+            "d = R - r",
+            f"d = {edge_d:6.1f} px",
+            "",
             "Ultrasonido:",
             "d = (v · t) / 2",
             f"v = {C.V_SOUND_CMMS/100:.0f} m/s",
@@ -207,6 +212,11 @@ class SumoSensorsGame:
                     self.opponent.launch_ping(now, self.player)
                     self.player.update_ping(dt)
                     self.opponent.update_ping(dt)
+
+                    # sensor de línea
+                    for b in (self.player, self.opponent):
+                        b.alert = b.edge_distance() < C.BOT_RADIUS*2
+                        b.colour = C.IMPACT_C if b.alert else b.base_colour
 
                     # KO
                     if not U.within_ring_with_radius(self.player.pos):

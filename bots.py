@@ -54,6 +54,7 @@ class Bot:
         """Crea un bot en ``pos`` y con color ``colour``."""
         self.pos         = Vector2(pos)
         self.heading_deg = 0.0
+        self.base_colour = colour
         self.colour      = colour
         self.vel         = Vector2()
         self.prev_vel    = Vector2()
@@ -63,6 +64,7 @@ class Bot:
 
         self.accel       = (0.0, 0.0)
         self.accel_time  = 0
+        self.alert       = False
 
     # ― física ―
     def integrate(self, dt_ms):
@@ -94,6 +96,12 @@ class Bot:
         self.accel = (ax, ay)
         self.accel_time = pygame.time.get_ticks()
         self.prev_vel = self.vel
+
+    # ― sensor de línea ―
+    def edge_distance(self):
+        """Distancia en píxeles desde el bot hasta el borde del dojo."""
+        pos = (self.pos.x, self.pos.y)
+        return C.DOJO_RADIUS - U.dist_to_center(pos)
 
     # ― sonar ―
     def _compute_ping_hit(self, opponent):
