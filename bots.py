@@ -9,18 +9,26 @@ import utils as U
 
 # ── Ping ultrasónico ────────────────────────────────────────────
 class Ping:
+    """Representa un pulso ultrasónico y su eco de retorno."""
+
     __slots__ = ("origin","dir_det","target_d","hit_pt","target_src","out","echo","echo_dir")
+
     def __init__(self, origin, dir_det, target_d, hit_pt, src):
+        """Inicializa el ping indicando origen, dirección y punto de impacto."""
         self.origin   = origin                  # (x,y)
-        self.dir_det  = dir_det                 # rad
-        self.target_d = target_d                # px al impacto
-        self.hit_pt   = hit_pt                  # (x,y) impacto
+        self.dir_det  = dir_det                 # radianes de emisión
+        self.target_d = target_d                # distancia al impacto (px)
+        self.hit_pt   = hit_pt                  # punto (x,y) de impacto
         self.target_src = src                   # "ring" | "bot"
         self.out   = 0.0
         self.echo  = 0.0
-        self.echo_dir = None                    # rad
+        self.echo_dir = None                    # dirección del eco (rad)
 
     def update(self, dt_ms):
+        """Propaga el frente de onda y, si procede, su eco.
+
+        Devuelve ``False`` cuando el ciclo del ping ha terminado.
+        """
         step = C.WAVE_SPEED_PX_MS * dt_ms
         self.out += step
         # Iniciar eco
@@ -40,7 +48,10 @@ class Ping:
 
 # ── Bot base ────────────────────────────────────────────────────
 class Bot:
+    """Entidad base para todos los robots del simulador."""
+
     def __init__(self, pos, colour):
+        """Crea un bot en ``pos`` y con color ``colour``."""
         self.pos         = Vector2(pos)
         self.heading_deg = 0.0
         self.colour      = colour
@@ -54,10 +65,16 @@ class Bot:
         self.accel_time  = 0
 
     # ― física ―
-    def integrate(self, dt_ms): self.pos += self.vel * (dt_ms/1000.0)
-    def apply_damping(self, dt_ms): self.vel *= U.damping_factor(dt_ms)
+    def integrate(self, dt_ms):
+        """Integra la velocidad actual para actualizar la posición."""
+        self.pos += self.vel * (dt_ms/1000.0)
+
+    def apply_damping(self, dt_ms):
+        """Aplica amortiguación proporcional al tiempo transcurrido."""
+        self.vel *= U.damping_factor(dt_ms)
 
     def push_apart(self, other):
+        """Separa este bot de ``other`` si se solapan."""
         d = self.pos.distance_to(other.pos)
         if d and d < C.BOT_RADIUS*2:
             overlap = C.BOT_RADIUS*2 - d
@@ -67,6 +84,7 @@ class Bot:
 
     # ― acelerómetro ―
     def record_accel(self, dt_ms):
+        """Calcula la aceleración a partir de la variación de velocidad."""
         if dt_ms <= 0:
             self.prev_vel = self.vel; return
         dv = self.vel - self.prev_vel
@@ -79,6 +97,7 @@ class Bot:
 
     # ― sonar ―
     def _compute_ping_hit(self, opponent):
+        """Calcula la distancia del siguiente obstáculo en la dirección actual."""
         dv = U.unit_vec(self.heading_deg)
         d_ring = U.ray_circle((self.pos.x, self.pos.y), dv)
         d_bot  = None
@@ -95,6 +114,7 @@ class Bot:
         return dist, hit_pt, "ring"
 
     def launch_ping(self, now_ms, opponent=None):
+        """Lanza un nuevo ping si ha pasado el tiempo de recarga."""
         if self.ping is None and now_ms - self.last_ping_ms >= C.PING_PERIOD_MS:
             dist, hit_pt, src = self._compute_ping_hit(opponent)
             self.ping = Ping((self.pos.x, self.pos.y),
@@ -103,12 +123,16 @@ class Bot:
             self.last_ping_ms = now_ms
 
     def update_ping(self, dt_ms):
+        """Actualiza el ping activo y lo elimina al finalizar."""
         if self.ping and not self.ping.update(dt_ms):
             self.ping = None
 
 # ── Derivadas “jugables” ────────────────────────────────────────
 class PlayerBot(Bot):
+    """Bot controlado por el jugador con cursores."""
+
     def update(self, keys, dt_ms):
+        """Procesa la entrada del usuario y actualiza el estado del bot."""
         ax = ay = 0.0
         if keys[pygame.K_LEFT]:  ax -= C.MOVE_ACC
         if keys[pygame.K_RIGHT]: ax += C.MOVE_ACC
@@ -123,8 +147,12 @@ class PlayerBot(Bot):
             self.vel.scale_to_length(C.MAX_SPEED)
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
 
+
 class Player2Bot(Bot):
+    """Bot controlado por un segundo jugador con las teclas IJKL."""
+
     def update(self, keys, dt_ms):
+        """Procesa la entrada del segundo jugador y actualiza el bot."""
         ax = ay = 0.0
         if keys[pygame.K_j]: ax -= C.MOVE_ACC
         if keys[pygame.K_l]: ax += C.MOVE_ACC
@@ -140,8 +168,10 @@ class Player2Bot(Bot):
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
 
 class CpuBot(Bot):
-    """IA con radar FOV: barre varios rayos y elige el eco más cercano."""
+    """Bot controlado por IA que busca al oponente mediante un radar FOV."""
+
     def _scan_angle(self, target_pos):
+        """Barre varios ángulos y devuelve el más cercano al objetivo."""
         N, half = 7, C.FOV_DEG/2
         best_d = best_deg = None
         for i in range(N):
@@ -155,6 +185,7 @@ class CpuBot(Bot):
         return best_deg
 
     def update(self, target_bot, dt_ms):
+        """Actualiza la IA orientándola hacia ``target_bot``."""
         # 1) sonar FOV
         scan = self._scan_angle((target_bot.pos.x, target_bot.pos.y))
         target_deg = scan if scan is not None else \

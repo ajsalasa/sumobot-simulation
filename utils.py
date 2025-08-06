@@ -7,11 +7,13 @@ import constants as C
 
 # ── Vectores y ángulos ──────────────────────────────────────────
 def unit_vec(deg: float):
+    """Devuelve un vector unitario a partir de un ángulo en grados."""
     rad = math.radians(deg)
     return math.cos(rad), math.sin(rad)
 
 # ── Dojo & colisiones ──────────────────────────────────────────
 def dist_to_center(pos):
+    """Distancia euclidiana desde ``pos`` al centro del dojo."""
     dx, dy = pos[0] - C.CENTER[0], pos[1] - C.CENTER[1]
     return math.hypot(dx, dy)
 
@@ -21,11 +23,13 @@ def within_ring_with_radius(pos):
 
 # ── Amortiguación dependiente de dt ────────────────────────────
 def damping_factor(dt_ms: float):
+    """Factor de amortiguación para un intervalo ``dt_ms``."""
     # 16.666 ms ≃ un frame a 60 FPS
     return C.DAMPING_PER_FRAME ** (dt_ms / 16.6667)
 
 # ── Intersecciones rayo-círculo ─────────────────────────────────
 def _solve_quadratic(a, b, c):
+    """Resuelve ``ax² + bx + c = 0`` devolviendo sus dos raíces."""
     disc = b*b - 4*a*c
     if disc < 0:
         return None, None
@@ -33,7 +37,7 @@ def _solve_quadratic(a, b, c):
     return (-b - root) / (2*a), (-b + root) / (2*a)
 
 def ray_circle(origin, dir_vec):
-    """Mínima t > 0 del rayo con el dojo (o MAX_RANGE)."""
+    """Mínima ``t`` > 0 del rayo con el dojo (o ``MAX_RANGE``)."""
     ox, oy = origin
     dx, dy = dir_vec
     cx, cy = C.CENTER
@@ -45,7 +49,7 @@ def ray_circle(origin, dir_vec):
     return min(ts) if ts else C.MAX_RANGE_PX
 
 def ray_disc(origin, dir_vec, center, radius):
-    """Mínima t > 0 con un disco cualquiera (bot)."""
+    """Mínima ``t`` > 0 de intersección con un disco cualquiera."""
     ox, oy = origin
     dx, dy = dir_vec
     cx, cy = center
