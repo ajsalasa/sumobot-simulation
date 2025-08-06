@@ -133,7 +133,19 @@ class SumoSensorsGame:
                            C.P2_C if self.two_players else C.CPU_C,
                            p2, C.BOT_RADIUS)
         # barra de tiempo + etiqueta
-        # ...
+        total = len(self.rec.frames)
+        if total:
+            prog = self.replay_idx / (total - 1) if total > 1 else 0
+            bar_x, bar_y = 20, C.SCREEN_H - 25
+            bar_w = C.SCREEN_W - bar_x*2
+            pygame.draw.rect(self.scr, C.TXT_C, (bar_x, bar_y, bar_w, 10), 1)
+            pygame.draw.rect(self.scr, C.IMPACT_C,
+                             (bar_x, bar_y, int(bar_w*prog), 10))
+            t0 = self.rec.frames[0]["t"]
+            t_sec = (fr["t"] - t0) / 1000
+            label = SMALL.render(f"{t_sec:6.2f} s", True, C.TXT_C)
+            self.scr.blit(label,
+                          (C.SCREEN_W//2 - label.get_width()//2, bar_y - 20))
         pygame.display.flip()
 
     # ── bucle principal ──────────────────────────────────────────
