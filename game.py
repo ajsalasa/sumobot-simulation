@@ -58,12 +58,30 @@ class SumoSensorsGame:
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
 
     def _draw_bot(self, bot):
-        """Renderiza un bot y una línea indicando su orientación."""
+        """Renderiza un bot y vector de orientación/aceleración."""
         pygame.draw.circle(self.scr, bot.colour,
                            (int(bot.pos.x), int(bot.pos.y)), C.BOT_RADIUS)
         vx, vy = U.unit_vec(bot.heading_deg)
         tip = (bot.pos.x + vx*C.BOT_RADIUS, bot.pos.y + vy*C.BOT_RADIUS)
         pygame.draw.line(self.scr, (255,255,255), bot.pos, tip, 2)
+
+        ax, ay = bot.accel
+        amag = math.hypot(ax, ay)
+        if amag > 0:
+            nx, ny = ax / amag, ay / amag
+            max_a = 5.0
+            max_len = 40
+            length = min(amag, max_a) / max_a * max_len
+            end = (bot.pos.x + nx*length, bot.pos.y + ny*length)
+            pygame.draw.line(self.scr, C.ACCEL_VEC_C, bot.pos, end, 3)
+            head = 8
+            ang = math.atan2(ny, nx)
+            left = (end[0] - head*math.cos(ang - math.pi/6),
+                    end[1] - head*math.sin(ang - math.pi/6))
+            right = (end[0] - head*math.cos(ang + math.pi/6),
+                     end[1] - head*math.sin(ang + math.pi/6))
+            pygame.draw.line(self.scr, C.ACCEL_VEC_C, end, left, 3)
+            pygame.draw.line(self.scr, C.ACCEL_VEC_C, end, right, 3)
 
     # ping fans (idénticos a versión monolítica) → reutilizamos los de bots.py
     def _draw_pings(self, bot):
@@ -98,6 +116,13 @@ class SumoSensorsGame:
         tof_ms  = (2 * dist_cm) / C.V_SOUND_CMMS
         ax, ay  = bot.accel
         amag    = math.hypot(ax, ay)
+        label_pos = None
+        if amag > 0:
+            nx, ny = ax / amag, ay / amag
+            max_a = 5.0
+            max_len = 40
+            length = min(amag, max_a) / max_a * max_len
+            label_pos = (bot.pos.x + nx*length, bot.pos.y + ny*length)
 
         lines = [
             "Ultrasonido:",
@@ -121,6 +146,10 @@ class SumoSensorsGame:
             else:
                 pos = (C.SCREEN_W - 10 - txt.get_width(), 10 + i*18)
             self.scr.blit(txt, pos)
+
+        if label_pos:
+            tag = SMALL.render(f"|a|={amag:4.2f}", True, C.ACCEL_VEC_C)
+            self.scr.blit(tag, (label_pos[0] + 5, label_pos[1] - 10))
 
     # ── draw modos ───────────────────────────────────────────────
     def draw_game(self, now):

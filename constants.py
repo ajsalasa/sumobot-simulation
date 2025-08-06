@@ -47,6 +47,7 @@ P2_C     = (110, 210, 120)
 PING_C   = ( 60, 230, 110)
 ECHO_C   = (240, 120,  60)
 IMPACT_C = (255,  90,  90)
+ACCEL_VEC_C = (255, 210,   0)
 TXT_C    = (  0,   0,   0)
 
 TAU = math.tau          # 2π, útil para cálculos angulares
