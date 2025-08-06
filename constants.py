@@ -49,4 +49,5 @@ ECHO_C   = (240, 120,  60)
 IMPACT_C = (255,  90,  90)
 TXT_C    = (  0,   0,   0)
 
-TAU = math.tau
+TAU = math.tau          # 2π, útil para cálculos angulares
+
