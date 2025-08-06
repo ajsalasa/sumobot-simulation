@@ -113,8 +113,9 @@ class SumoSensorsGame:
 
     def _draw_hud(self, bot, opponent, align_left=True):
         """Renderiza fórmulas e información de sensores para un bot."""
-        dist_px, _, _ = bot._compute_ping_hit(opponent)
+        dist_px, real_px, _, _ = bot._compute_ping_hit(opponent)
         dist_cm = dist_px / C.PX_PER_CM
+        real_cm = real_px / C.PX_PER_CM
         tof_ms  = (2 * dist_cm) / C.V_SOUND_CMMS
         ax, ay  = bot.accel
         amag    = math.hypot(ax, ay)
@@ -131,7 +132,7 @@ class SumoSensorsGame:
             "d = (v · t) / 2",
             f"v = {C.V_SOUND_CMMS/100:.0f} m/s",
             f"t = {tof_ms:6.2f} ms",
-            f"d = {dist_cm:6.1f} cm",
+            f"d = {dist_cm:6.1f} cm (real {real_cm:6.1f})",
             "",
             "Acelerómetro:",
             "a = Δv / Δt",
