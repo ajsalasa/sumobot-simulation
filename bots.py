@@ -63,6 +63,8 @@ class Bot:
 
         self.accel       = (0.0, 0.0)
         self.accel_time  = 0
+        self.ang_vel     = 0.0
+        self.prev_heading= 0.0
 
     # ― física ―
     def integrate(self, dt_ms):
@@ -94,6 +96,17 @@ class Bot:
         self.accel = (ax, ay)
         self.accel_time = pygame.time.get_ticks()
         self.prev_vel = self.vel
+
+    # ― velocímetro angular ―
+    def record_ang_vel(self, dt_ms):
+        """Calcula la velocidad angular a partir de la variación de orientación."""
+        if dt_ms <= 0:
+            self.prev_heading = self.heading_deg
+            self.ang_vel = 0.0
+            return
+        dtheta = (self.heading_deg - self.prev_heading + 540) % 360 - 180
+        self.ang_vel = dtheta / (dt_ms/1000.0)
+        self.prev_heading = self.heading_deg
 
     # ― sonar ―
     def _compute_ping_hit(self, opponent):
@@ -142,6 +155,7 @@ class PlayerBot(Bot):
         self.vel.y += ay * (dt_ms/1000.0)
         if self.vel.length_squared() > 0:
             self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
+        self.record_ang_vel(dt_ms)
         # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
@@ -162,6 +176,7 @@ class Player2Bot(Bot):
         self.vel.y += ay * (dt_ms/1000.0)
         if self.vel.length_squared() > 0:
             self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
+        self.record_ang_vel(dt_ms)
         # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
@@ -199,6 +214,7 @@ class CpuBot(Bot):
                                 C.CPU_TURN*(1 if diff>0 else -1)) % 360
         else:
             self.heading_deg = target_deg
+        self.record_ang_vel(dt_ms)
 
         # velocidad deseada
         vx, vy = U.unit_vec(self.heading_deg)
