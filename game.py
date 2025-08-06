@@ -108,7 +108,7 @@ class SumoSensorsGame:
     def run(self):
         running = True
         while running:
-            dt   = self.clock.tick(60)
+            dt   = self.clock.tick(60) * C.TIME_SCALE
             now  = pygame.time.get_ticks()
             for e in pygame.event.get():
                 if e.type == pygame.QUIT or \

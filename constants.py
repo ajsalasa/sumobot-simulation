@@ -20,9 +20,10 @@ WAVE_SPEED_PX_MS = (V_SOUND_CMMS / 100) * PX_PER_CM   # ≃ 1.37 px ms-1
 TURN_DEG            = 4          # giro jugador (° frame-1)
 MOVE_ACC            = 950.0       # aceleración jugador (px s-2)
 CPU_TURN            = 4          # giro máximo CPU (° frame-1)
-MAX_SPEED           = 260.0 
+MAX_SPEED           = 260.0
 CPU_SPEED           = 150.0      # velocidad objetivo CPU (px s-1)
 DAMPING_PER_FRAME   = 0.93       # amortiguación (~10 % a 60 FPS)
+TIME_SCALE          = 0.5        # escala global del tiempo (<1 más lento)
 
 # ── Sensor ultrasónico ──────────────────────────────────────────
 FOV_DEG        = 24
