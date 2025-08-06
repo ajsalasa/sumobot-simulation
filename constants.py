@@ -30,6 +30,9 @@ FOV_DEG        = 24
 CREST_GAP_PX   = 35
 PING_PERIOD_MS = 700
 MAX_RANGE_PX   = DOJO_RADIUS + 40
+PING_NOISE_PX  = 0               # amplitud del ruido (px)
+# Rango ajustable para interfaces o menús externos
+PING_NOISE_RANGE = (0, 40)
 
 # ── Acelerómetro ────────────────────────────────────────────────
 ACCEL_DISPLAY_MS = 600

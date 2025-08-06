@@ -2,7 +2,7 @@
 Ping + clases Bot (base y derivadas).  Toda la lógica física y de IA vive aquí;
 nada de render salvo indicar colores (que vienen de constants).
 """
-import math, pygame
+import math, pygame, random
 from pygame.math import Vector2
 import constants as C
 import utils as U
@@ -96,8 +96,12 @@ class Bot:
         self.prev_vel = self.vel
 
     # ― sonar ―
-    def _compute_ping_hit(self, opponent):
-        """Calcula la distancia del siguiente obstáculo en la dirección actual."""
+    def _compute_ping_hit(self, opponent, noisy=True):
+        """Calcula la distancia del siguiente obstáculo en la dirección actual.
+
+        Devuelve una tupla ``(medida, real, hit_pt, src)`` donde ``medida`` es la
+        distancia perturbada aleatoriamente y ``real`` la distancia exacta.
+        """
         dv = U.unit_vec(self.heading_deg)
         d_ring = U.ray_circle((self.pos.x, self.pos.y), dv)
         d_bot  = None
@@ -105,18 +109,26 @@ class Bot:
             d_bot = U.ray_disc((self.pos.x, self.pos.y), dv,
                                (opponent.pos.x, opponent.pos.y), C.BOT_RADIUS)
         if d_bot is not None and d_bot < d_ring and d_bot <= C.MAX_RANGE_PX:
-            hit_pt = (self.pos.x + dv[0]*d_bot,
-                      self.pos.y + dv[1]*d_bot)
-            return d_bot, hit_pt, "bot"
-        dist = min(d_ring, C.MAX_RANGE_PX)
-        hit_pt = (self.pos.x + dv[0]*dist,
-                  self.pos.y + dv[1]*dist)
-        return dist, hit_pt, "ring"
+            real = d_bot
+            hit_pt = (self.pos.x + dv[0]*real,
+                      self.pos.y + dv[1]*real)
+            src = "bot"
+        else:
+            real = min(d_ring, C.MAX_RANGE_PX)
+            hit_pt = (self.pos.x + dv[0]*real,
+                      self.pos.y + dv[1]*real)
+            src = "ring"
+        if noisy:
+            noise = random.uniform(-C.PING_NOISE_PX, C.PING_NOISE_PX)
+            measured = max(0.0, real + noise)
+        else:
+            measured = real
+        return measured, real, hit_pt, src
 
     def launch_ping(self, now_ms, opponent=None):
         """Lanza un nuevo ping si ha pasado el tiempo de recarga."""
         if self.ping is None and now_ms - self.last_ping_ms >= C.PING_PERIOD_MS:
-            dist, hit_pt, src = self._compute_ping_hit(opponent)
+            _, dist, hit_pt, src = self._compute_ping_hit(opponent, noisy=False)
             self.ping = Ping((self.pos.x, self.pos.y),
                              math.radians(self.heading_deg),
                              dist, hit_pt, src)
