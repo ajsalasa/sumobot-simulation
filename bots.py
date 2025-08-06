@@ -100,8 +100,7 @@ class Bot:
     # ― sensor de línea ―
     def edge_distance(self):
         """Distancia en píxeles desde el bot hasta el borde del dojo."""
-        pos = (self.pos.x, self.pos.y)
-        return C.DOJO_RADIUS - U.dist_to_center(pos)
+        return C.DOJO_RADIUS - U.dist_to_center(self.pos)
 
     # ― sonar ―
     def _compute_ping_hit(self, opponent):
