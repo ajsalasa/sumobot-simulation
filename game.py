@@ -1,7 +1,3 @@
-"""
-Bucle principal, render y gestión de estado.  Importa los módulos lógicos
-pero deja la inicialización de Pygame y el loop de eventos aquí.
-"""
 import sys, pygame
 import constants as C
 import utils as U
@@ -17,7 +13,6 @@ class SumoSensorsGame:
     """Encapsula el estado y la lógica principal del simulador."""
 
     def __init__(self):
-        """Inicializa Pygame y crea los bots y recursos iniciales."""
         self.scr   = pygame.display.set_mode((C.SCREEN_W, C.SCREEN_H))
         pygame.display.set_caption("Sumo-Sensors (modular)")
         self.clock = pygame.time.Clock()
@@ -26,9 +21,7 @@ class SumoSensorsGame:
         self.rec   = Recorder()
         self.reset()
 
-    # ── ciclos de vida ───────────────────────────────────────────
     def reset(self):
-        """Reinicia la partida creando bots nuevos y limpiando estados."""
         self.player = B.PlayerBot((C.CENTER[0]-120, C.CENTER[1]), C.PLAYER_C)
         self.player.heading_deg = 0
         self.player.prev_heading = 0
@@ -46,26 +39,20 @@ class SumoSensorsGame:
         self.opponent.update_ir()
 
     def toggle_two_players(self):
-        """Activa o desactiva el modo de dos jugadores."""
         self.two_players = not self.two_players
         self.reset()
 
     def start_replay(self):
-        """Inicia el modo de repetición si hay datos grabados."""
         self.replay_mode = bool(self.rec.frames)
         self.replay_idx = 0
 
-    # ── helpers de dibujo ────────────────────────────────────────
     def _ring(self):
-        """Dibuja el dojo circular con su borde blanco."""
         pygame.draw.circle(self.scr, C.RING_FILL, C.CENTER, C.DOJO_RADIUS)
         pygame.draw.circle(self.scr, C.CENTER_MARK_C, C.CENTER, C.CENTER_MARK_RADIUS)
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
 
     def _draw_bot(self, bot):
-        """Renderiza un bot y vector de orientación/aceleración."""
-        pygame.draw.circle(self.scr, bot.colour,
-                           (int(bot.pos.x), int(bot.pos.y)), C.BOT_RADIUS)
+        pygame.draw.circle(self.scr, bot.colour, (int(bot.pos.x), int(bot.pos.y)), C.BOT_RADIUS)
         vx, vy = U.unit_vec(bot.heading_deg)
         tip = (bot.pos.x + vx*C.BOT_RADIUS, bot.pos.y + vy*C.BOT_RADIUS)
         pygame.draw.line(self.scr, (255,255,255), bot.pos, tip, 2)
@@ -88,9 +75,7 @@ class SumoSensorsGame:
             pygame.draw.line(self.scr, C.ACCEL_VEC_C, end, left, 3)
             pygame.draw.line(self.scr, C.ACCEL_VEC_C, end, right, 3)
 
-    # ping fans (idénticos a versión monolítica) → reutilizamos los de bots.py
     def _draw_pings(self, bot):
-        """Dibuja el frente de onda del ping y su eco."""
         if not bot.ping:
             return
         fan = pygame.Surface((C.SCREEN_W, C.SCREEN_H), pygame.SRCALPHA)
@@ -101,7 +86,6 @@ class SumoSensorsGame:
         self.scr.blit(fan, (0,0))
 
     def _draw_fan(self, surf, centre, det_angle, prog, colour):
-        """Dibuja arcos concéntricos representando la propagación de una onda."""
         arc = (-det_angle) % C.TAU
         half = math.radians(C.FOV_DEG/2)
         kmax = int(prog//C.CREST_GAP_PX) + 2
@@ -115,13 +99,14 @@ class SumoSensorsGame:
                             arc-half, arc+half, 2)
 
     def _draw_hud(self, bot, opponent, align_left=True):
-        """Renderiza fórmulas e información de sensores para un bot."""
         dist_px, real_px, _, _ = bot._compute_ping_hit(opponent)
         dist_cm = dist_px / C.PX_PER_CM
         real_cm = real_px / C.PX_PER_CM
         tof_ms  = (2 * dist_cm) / C.V_SOUND_CMMS
         ax, ay  = bot.accel
         amag    = math.hypot(ax, ay)
+        gyro    = bot.gyroscope.read_angular_velocity()
+
         label_pos = None
         if amag > 0:
             nx, ny = ax / amag, ay / amag
@@ -145,8 +130,9 @@ class SumoSensorsGame:
             f"|a| = {amag/C.G_MSS:5.2f} g",
             "",
             "Velocidad angular:",
-            "ω = Δθ/Δt",
+            "ω = Δθ / Δt",
             f"ω = {bot.ang_vel:6.2f} °/s",
+            f"ω (giroscopio) = {gyro:6.2f} °/s"
             "",
             "Sensor IR:",
             "I = P · ρ / d²",
@@ -168,16 +154,15 @@ class SumoSensorsGame:
             tag = SMALL.render(f"|a|={amag:4.2f}", True, C.ACCEL_VEC_C)
             self.scr.blit(tag, (label_pos[0] + 5, label_pos[1] - 10))
 
-    # ── draw modos ───────────────────────────────────────────────
     def draw_game(self, now):
         """Renderiza el estado del juego durante una partida normal."""
         self.scr.fill(C.BG_C)
+
         self._ring()
         for b in (self.player, self.opponent):
             self._draw_bot(b)
             self._draw_pings(b)
 
-        # HUD de sensores para ambos bots
         self._draw_hud(self.player, self.opponent, align_left=True)
         self._draw_hud(self.opponent, self.player, align_left=False)
 
@@ -201,7 +186,6 @@ class SumoSensorsGame:
         pygame.draw.circle(self.scr,
                            C.P2_C if self.two_players else C.CPU_C,
                            p2, C.BOT_RADIUS)
-        # barra de tiempo + etiqueta
         total = len(self.rec.frames)
         if total:
             prog = self.replay_idx / (total - 1) if total > 1 else 0
@@ -217,9 +201,7 @@ class SumoSensorsGame:
                           (C.SCREEN_W//2 - label.get_width()//2, bar_y - 20))
         pygame.display.flip()
 
-    # ── bucle principal ──────────────────────────────────────────
     def run(self):
-        """Bucle principal de la aplicación."""
         running = True
         while running:
             dt   = self.clock.tick(60) * C.TIME_SCALE
@@ -247,7 +229,6 @@ class SumoSensorsGame:
                     else:
                         self.opponent.update(keys, dt)
                     self.player.push_apart(self.opponent)
-
                     # sensores
                     self.player.update_ir()
                     self.opponent.update_ir()

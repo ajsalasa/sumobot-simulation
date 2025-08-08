@@ -6,8 +6,8 @@ import math, pygame, random
 from pygame.math import Vector2
 import constants as C
 import utils as U
+from gyroscope import GyroscopeSimulated
 
-# ── Ping ultrasónico ────────────────────────────────────────────
 class Ping:
     """Representa un pulso ultrasónico y su eco de retorno."""
 
@@ -15,14 +15,14 @@ class Ping:
 
     def __init__(self, origin, dir_det, target_d, hit_pt, src):
         """Inicializa el ping indicando origen, dirección y punto de impacto."""
-        self.origin   = origin                  # (x,y)
-        self.dir_det  = dir_det                 # radianes de emisión
-        self.target_d = target_d                # distancia al impacto (px)
-        self.hit_pt   = hit_pt                  # punto (x,y) de impacto
-        self.target_src = src                   # "ring" | "bot"
+        self.origin   = origin
+        self.dir_det  = dir_det
+        self.target_d = target_d
+        self.hit_pt   = hit_pt
+        self.target_src = src 
         self.out   = 0.0
         self.echo  = 0.0
-        self.echo_dir = None                    # dirección del eco (rad)
+        self.echo_dir = None
 
     def update(self, dt_ms):
         """Propaga el frente de onda y, si procede, su eco.
@@ -31,22 +31,18 @@ class Ping:
         """
         step = C.WAVE_SPEED_PX_MS * dt_ms
         self.out += step
-        # Iniciar eco
         if self.out >= self.target_d and self.echo_dir is None:
             sx, sy = self.origin; hx, hy = self.hit_pt
             self.echo_dir = math.atan2(sy-hy, sx-hx)
             self.echo = 0.0
-        # Propagar eco
         if self.echo_dir is not None:
             self.echo += step
             if self.echo >= self.target_d:
-                return False                    # ciclo completo
-        # Optimización: ping sin eco y lejísimos
+                return False
         if self.echo_dir is None and self.out > C.MAX_RANGE_PX:
             return False
         return True
 
-# ── Bot base ────────────────────────────────────────────────────
 class Bot:
     """Entidad base para todos los robots del simulador."""
 
@@ -58,14 +54,15 @@ class Bot:
         self.vel         = Vector2()
         self.prev_vel    = Vector2()
 
-        self.ping        = None     # Ping activo
+        self.ping        = None 
         self.last_ping_ms= 0
 
         self.accel       = (0.0, 0.0)
         self.accel_time  = 0
         self.ang_vel     = 0.0
-        self.prev_heading= 0.0
+        self.prev_heading = 0.0
 
+        self.gyroscope = GyroscopeSimulated()
         self.ir_intensity = 0.0
         self.ir_rho       = C.IR_RHO_BLACK
         self.ir_dist_cm   = 0.0
@@ -75,6 +72,7 @@ class Bot:
     def integrate(self, dt_ms):
         """Integra la velocidad actual para actualizar la posición."""
         self.pos += self.vel * (dt_ms/1000.0)
+        self.gyroscope.update(self.ang_vel, dt_ms)
 
     def apply_damping(self, dt_ms):
         """Aplica amortiguación proporcional al tiempo transcurrido."""
@@ -89,7 +87,6 @@ class Bot:
             self.pos  -= n * overlap/2
             other.pos += n * overlap/2
 
-    # ― acelerómetro ―
     def record_accel(self, dt_ms):
         """Calcula la aceleración a partir de la variación de velocidad."""
         if dt_ms <= 0:
@@ -97,12 +94,11 @@ class Bot:
         dv = self.vel - self.prev_vel
         ax = (dv.x) / (dt_ms/1000.0)
         ay = (dv.y) / (dt_ms/1000.0)
-        ax *= 0.0025; ay *= 0.0025          # px→m
+        ax *= 0.0025; ay *= 0.0025
         self.accel = (ax, ay)
         self.accel_time = pygame.time.get_ticks()
         self.prev_vel = self.vel
 
-    # ― velocímetro angular ―
     def record_ang_vel(self, dt_ms):
         """Calcula la velocidad angular a partir de la variación de orientación."""
         if dt_ms <= 0:
@@ -128,6 +124,7 @@ class Bot:
         self.ir_intensity = (C.IR_POWER * self.ir_rho) / (C.IR_SENSOR_HEIGHT_CM ** 2)
 
     # ― sonar ―
+
     def _compute_ping_hit(self, opponent, noisy=True):
         """Calcula la distancia del siguiente obstáculo en la dirección actual.
 
@@ -170,8 +167,14 @@ class Bot:
         """Actualiza el ping activo y lo elimina al finalizar."""
         if self.ping and not self.ping.update(dt_ms):
             self.ping = None
-
-# ── Derivadas “jugables” ────────────────────────────────────────
+    
+    def detectar_Empuje(self, umbral_giro = 40.0):
+        vel_vang = self.gyroscope.read_angular_velocity()
+        if abs(vel_vang) > umbral_giro and self.ang_vel == 0:
+            print(f"[{self.colour}] Empujón Detectado, velocidad angular: {vel_vang:.2f}°/s")
+            return True
+        return False
+    
 class PlayerBot(Bot):
     """Bot controlado por el jugador con cursores."""
 
@@ -187,7 +190,6 @@ class PlayerBot(Bot):
         if self.vel.length_squared() > 0:
             self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
         self.record_ang_vel(dt_ms)
-        # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
@@ -208,7 +210,6 @@ class Player2Bot(Bot):
         if self.vel.length_squared() > 0:
             self.heading_deg = math.degrees(math.atan2(self.vel.y, self.vel.x)) % 360
         self.record_ang_vel(dt_ms)
-        # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
@@ -232,13 +233,10 @@ class CpuBot(Bot):
 
     def update(self, target_bot, dt_ms):
         """Actualiza la IA orientándola hacia ``target_bot``."""
-        # 1) sonar FOV
         scan = self._scan_angle((target_bot.pos.x, target_bot.pos.y))
         target_deg = scan if scan is not None else \
-            math.degrees(math.atan2(target_bot.pos.y - self.pos.y,
-                                    target_bot.pos.x - self.pos.x)) % 360
+            math.degrees(math.atan2(target_bot.pos.y - self.pos.y,target_bot.pos.x - self.pos.x)) % 360
 
-        # limitar velocidad angular
         diff = (target_deg - self.heading_deg + 540) % 360 - 180
         if abs(diff) > C.CPU_TURN:
             self.heading_deg = (self.heading_deg +
@@ -247,11 +245,12 @@ class CpuBot(Bot):
             self.heading_deg = target_deg
         self.record_ang_vel(dt_ms)
 
-        # velocidad deseada
         vx, vy = U.unit_vec(self.heading_deg)
         desired = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
         self.vel = self.vel.lerp(desired, 0.25)
-        # Limitar la velocidad para que no crezca sin control
         if self.vel.length() > C.MAX_SPEED:
             self.vel.scale_to_length(C.MAX_SPEED)
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
+        if self.detectar_Empuje():
+            print("[CPUBot] Empujón Detectado, reposicionado...")
+            self.heading_deg = (self.heading_deg + 90) % 360
