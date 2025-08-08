@@ -48,6 +48,7 @@ IR_RHO_BLACK = 0.2                # reflectividad (negro)
 IR_RHO_BLUE  = 0.5                # reflectividad (azul)
 IR_SENSOR_HEIGHT_CM = 2.0         # altura fija del sensor sobre el suelo
 
+
 # ── Colores (RGB) ───────────────────────────────────────────────
 BG_C         = (  0,   0,   0)
 RING_FILL    = BG_C

@@ -68,6 +68,7 @@ class Bot:
 
         self.ir_intensity = 0.0
         self.ir_rho       = C.IR_RHO_BLACK
+        self.ir_dist_cm   = 0.0
         self.ir_colour    = "negro"
 
     # ― física ―
