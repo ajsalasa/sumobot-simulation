@@ -66,6 +66,11 @@ class Bot:
         self.ang_vel     = 0.0
         self.prev_heading= 0.0
 
+        self.ir_intensity = 0.0
+        self.ir_rho       = C.IR_RHO_BLACK
+        self.ir_dist_cm   = 0.0
+        self.ir_colour    = "negro"
+
     # ― física ―
     def integrate(self, dt_ms):
         """Integra la velocidad actual para actualizar la posición."""
@@ -107,6 +112,22 @@ class Bot:
         dtheta = (self.heading_deg - self.prev_heading + 540) % 360 - 180
         self.ang_vel = dtheta / (dt_ms/1000.0)
         self.prev_heading = self.heading_deg
+
+    # ― sensor infrarrojo ―
+    def update_ir(self):
+        """Actualiza la lectura del sensor IR según la posición actual."""
+        dist_px = U.dist_to_center((self.pos.x, self.pos.y))
+        self.ir_dist_cm = dist_px / C.PX_PER_CM
+        if U.on_white_line((self.pos.x, self.pos.y)):
+            self.ir_rho = C.IR_RHO_WHITE
+            self.ir_colour = "blanco"
+        else:
+            self.ir_rho = C.IR_RHO_BLACK
+            self.ir_colour = "negro"
+        if dist_px > 0:
+            self.ir_intensity = (C.IR_POWER * self.ir_rho) / (dist_px ** 2)
+        else:
+            self.ir_intensity = 0.0
 
     # ― sonar ―
     def _compute_ping_hit(self, opponent, noisy=True):
