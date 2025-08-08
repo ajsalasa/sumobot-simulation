@@ -228,15 +228,7 @@ class CpuBot(Bot):
         now_ms = pygame.time.get_ticks()
 
         if self.state == "scan":
-            # gira sobre su eje lanzando pings y sin desplazarse
-            turn = C.CPU_TURN * (dt_ms / 16.6667)
-            self.heading_deg = (self.heading_deg + turn) % 360
-
-            self.record_ang_vel(dt_ms)
-            self.vel.xy = (0.0, 0.0)
-            self.launch_ping(now_ms, target_bot)
-            self.update_ping(dt_ms)
-            # detección básica dentro del campo de visión del sonar
+            # detección básica dentro del campo de visión del sonar antes de girar
             dx = target_bot.pos.x - self.pos.x
             dy = target_bot.pos.y - self.pos.y
             dist = math.hypot(dx, dy)
@@ -247,8 +239,19 @@ class CpuBot(Bot):
                     self.state = "pursue"
                     self.heading_deg = ang_to
                     self.scan_rot = 0
+                    self.vel.xy = (0.0, 0.0)
+                    self.record_ang_vel(0)
                     self.record_accel(dt_ms)
                     return
+
+            # gira sobre su eje lanzando pings y sin desplazarse
+            turn = C.CPU_TURN * (dt_ms / 16.6667)
+            self.heading_deg = (self.heading_deg + turn) % 360
+
+            self.record_ang_vel(dt_ms)
+            self.vel.xy = (0.0, 0.0)
+            self.launch_ping(now_ms, target_bot)
+            self.update_ping(dt_ms)
 
             self.scan_rot += abs(turn)
             self.record_accel(dt_ms)
