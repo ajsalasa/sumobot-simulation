@@ -38,6 +38,11 @@ PING_NOISE_RANGE = (0, 40)
 ACCEL_DISPLAY_MS = 600
 G_MSS = 9.81
 
+# ── Sensor infrarrojo ────────────────────────────────────────────
+IR_POWER     = 1000.0             # potencia emitida (unidad arb.)
+IR_RHO_WHITE = 0.9                # reflectividad (blanco)
+IR_RHO_BLACK = 0.2                # reflectividad (negro)
+
 # ── Colores (RGB) ───────────────────────────────────────────────
 GREY_BG   = (225, 225, 225)
 RING_FILL = ( 20,  20,  20)

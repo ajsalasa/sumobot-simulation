@@ -42,6 +42,8 @@ class SumoSensorsGame:
         self.replay_mode = False
         self.replay_idx  = 0
         self.rec.frames.clear()
+        self.player.update_ir()
+        self.opponent.update_ir()
 
     def toggle_two_players(self):
         """Activa o desactiva el modo de dos jugadores."""
@@ -144,6 +146,13 @@ class SumoSensorsGame:
             "Velocidad angular:",
             "ω = Δθ/Δt",
             f"ω = {bot.ang_vel:6.2f} °/s",
+            "",
+            "Sensor IR:",
+            "I = P · ρ / d²",
+            f"d = {bot.ir_dist_cm:6.1f} cm",
+            f"ρ = {bot.ir_rho:4.2f}",
+            f"I = {bot.ir_intensity:6.2f}",
+            f"color = {bot.ir_colour}",
         ]
 
         for i, line in enumerate(lines):
@@ -238,16 +247,18 @@ class SumoSensorsGame:
                         self.opponent.update(keys, dt)
                     self.player.push_apart(self.opponent)
 
-                    # sonar
+                    # sensores
+                    self.player.update_ir()
+                    self.opponent.update_ir()
                     self.player.launch_ping(now, self.opponent)
                     self.opponent.launch_ping(now, self.player)
                     self.player.update_ping(dt)
                     self.opponent.update_ping(dt)
 
-                    # KO
-                    if not U.within_ring_with_radius(self.player.pos):
+                    # KO por línea blanca
+                    if U.on_white_line(self.player.pos) or not U.within_ring_with_radius(self.player.pos):
                         self.winner = "CPU" if not self.two_players else "JUGADOR 2"
-                    if not U.within_ring_with_radius(self.opponent.pos):
+                    if U.on_white_line(self.opponent.pos) or not U.within_ring_with_radius(self.opponent.pos):
                         self.winner = "JUGADOR" if not self.two_players else "JUGADOR 1"
                     if self.winner:
                         self.game_over=True
