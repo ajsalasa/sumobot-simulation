@@ -25,7 +25,7 @@ WAVE_SPEED_PX_MS = (V_SOUND_CMMS / 100) * PX_PER_CM   # ≃ 1.37 px ms-1
 # ── Movimiento ──────────────────────────────────────────────────
 TURN_DEG            = 4          # giro jugador (° frame-1)
 MOVE_ACC            = 950.0       # aceleración jugador (px s-2)
-CPU_TURN            = 4          # giro máximo CPU (° frame-1)
+CPU_TURN            = 1.0        # giro máximo CPU (° frame-1)
 
 MAX_SPEED           = 260.0
 CPU_SPEED           = 150.0
