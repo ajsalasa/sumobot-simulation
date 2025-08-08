@@ -59,6 +59,7 @@ class SumoSensorsGame:
     def _ring(self):
         """Dibuja el dojo circular con su borde blanco."""
         pygame.draw.circle(self.scr, C.RING_FILL, C.CENTER, C.DOJO_RADIUS)
+        pygame.draw.circle(self.scr, C.CENTER_MARK_C, C.CENTER, C.CENTER_MARK_RADIUS)
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
 
     def _draw_bot(self, bot):
@@ -149,7 +150,7 @@ class SumoSensorsGame:
             "",
             "Sensor IR:",
             "I = P · ρ / d²",
-            f"d = {bot.ir_dist_cm:6.1f} cm",
+            f"d = {C.IR_SENSOR_HEIGHT_CM:6.1f} cm",
             f"ρ = {bot.ir_rho:4.2f}",
             f"I = {bot.ir_intensity:6.2f}",
             f"color = {bot.ir_colour}",
@@ -170,7 +171,7 @@ class SumoSensorsGame:
     # ── draw modos ───────────────────────────────────────────────
     def draw_game(self, now):
         """Renderiza el estado del juego durante una partida normal."""
-        self.scr.fill(C.GREY_BG)
+        self.scr.fill(C.BG_C)
         self._ring()
         for b in (self.player, self.opponent):
             self._draw_bot(b)
@@ -191,7 +192,7 @@ class SumoSensorsGame:
 
     def draw_replay(self):
         """Dibuja el modo de repetición de una partida grabada."""
-        self.scr.fill((245,245,245))
+        self.scr.fill(C.BG_C)
         self._ring()
         fr = self.rec.frames[self.replay_idx]
         p1 = (fr["p1x"], fr["p1y"])
