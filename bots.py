@@ -231,11 +231,11 @@ class CpuBot(Bot):
             # gira sobre su eje lanzando pings y sin desplazarse
             turn = C.CPU_TURN * (dt_ms / 16.6667)
             self.heading_deg = (self.heading_deg + turn) % 360
+
             self.record_ang_vel(dt_ms)
             self.vel.xy = (0.0, 0.0)
             self.launch_ping(now_ms, target_bot)
             self.update_ping(dt_ms)
-
             # detección básica dentro del campo de visión del sonar
             dx = target_bot.pos.x - self.pos.x
             dy = target_bot.pos.y - self.pos.y
@@ -257,6 +257,7 @@ class CpuBot(Bot):
                 self.move_time = 0
                 self.scan_rot = 0
                 self.heading_deg = random.uniform(0, 360)
+
 
         elif self.state == "move":
             # avanza recto durante un breve periodo antes de volver a escanear
@@ -282,12 +283,14 @@ class CpuBot(Bot):
             self.launch_ping(now_ms, target_bot)
             self.update_ping(dt_ms)
 
+
             dx = target_bot.pos.x - self.pos.x
             dy = target_bot.pos.y - self.pos.y
             dist = math.hypot(dx, dy)
             ang_to = math.degrees(math.atan2(dy, dx)) % 360
             diff = (ang_to - self.heading_deg + 540) % 360 - 180
             if dist > C.MAX_RANGE_PX or abs(diff) > C.FOV_DEG / 2:
+
                 self.state = "scan"
                 self.vel.xy = (0.0, 0.0)
 
