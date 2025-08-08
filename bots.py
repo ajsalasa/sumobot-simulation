@@ -297,21 +297,33 @@ class CpuBot(Bot):
             self.vel = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
             if self.vel.length() > C.MAX_SPEED:
                 self.vel.scale_to_length(C.MAX_SPEED)
-            self.apply_damping(dt_ms); self.integrate(dt_ms)
-            self.record_accel(dt_ms); self.record_ang_vel(dt_ms)
+            self.apply_damping(dt_ms)
+
+            self.record_ang_vel(dt_ms)
+            prev_pos = self.pos.copy()
+            self.integrate(dt_ms)
+            self.update_ir()
+            if self.ir_colour == "blanco":
+                # si detecta el borde, retrocede y vuelve a escanear
+                self.pos = prev_pos
+                self.heading_deg = (self.heading_deg + 180) % 360
+                self.record_ang_vel(0)
+                self.state = "move"
+                self.move_time = 0
+
+            self.record_accel(dt_ms)
             self.launch_ping(now_ms, target_bot)
             self.update_ping(dt_ms)
 
-
-            dx = target_bot.pos.x - self.pos.x
-            dy = target_bot.pos.y - self.pos.y
-            dist = math.hypot(dx, dy)
-            ang_to = math.degrees(math.atan2(dy, dx)) % 360
-            diff = (ang_to - self.heading_deg + 540) % 360 - 180
-            if dist > C.MAX_RANGE_PX or abs(diff) > C.FOV_DEG / 2:
-
-                self.state = "scan"
-                self.vel.xy = (0.0, 0.0)
+            if self.state == "pursue":
+                dx = target_bot.pos.x - self.pos.x
+                dy = target_bot.pos.y - self.pos.y
+                dist = math.hypot(dx, dy)
+                ang_to = math.degrees(math.atan2(dy, dx)) % 360
+                diff = (ang_to - self.heading_deg + 540) % 360 - 180
+                if dist > C.MAX_RANGE_PX or abs(diff) > C.FOV_DEG / 2:
+                    self.state = "scan"
+                    self.vel.xy = (0.0, 0.0)
 
         if self.detectar_Empuje():
             print("[CPUBot] Empujón Detectado, reposicionado...")
