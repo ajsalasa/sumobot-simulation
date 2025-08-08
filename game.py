@@ -35,6 +35,8 @@ class SumoSensorsGame:
         self.replay_mode = False
         self.replay_idx  = 0
         self.rec.frames.clear()
+        self.player.update_ir()
+        self.opponent.update_ir()
 
     def toggle_two_players(self):
         self.two_players = not self.two_players
@@ -46,6 +48,7 @@ class SumoSensorsGame:
 
     def _ring(self):
         pygame.draw.circle(self.scr, C.RING_FILL, C.CENTER, C.DOJO_RADIUS)
+        pygame.draw.circle(self.scr, C.CENTER_MARK_C, C.CENTER, C.CENTER_MARK_RADIUS)
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
 
     def _draw_bot(self, bot):
@@ -130,6 +133,13 @@ class SumoSensorsGame:
             "ω = Δθ / Δt",
             f"ω = {bot.ang_vel:6.2f} °/s",
             f"ω (giroscopio) = {gyro:6.2f} °/s"
+            "",
+            "Sensor IR:",
+            "I = P · ρ / d²",
+            f"d = {C.IR_SENSOR_HEIGHT_CM:6.1f} cm",
+            f"ρ = {bot.ir_rho:4.2f}",
+            f"I = {bot.ir_intensity:6.2f}",
+            f"color = {bot.ir_colour}",
         ]
 
         for i, line in enumerate(lines):
@@ -145,7 +155,9 @@ class SumoSensorsGame:
             self.scr.blit(tag, (label_pos[0] + 5, label_pos[1] - 10))
 
     def draw_game(self, now):
-        self.scr.fill(C.GREY_BG)
+        """Renderiza el estado del juego durante una partida normal."""
+        self.scr.fill(C.BG_C)
+
         self._ring()
         for b in (self.player, self.opponent):
             self._draw_bot(b)
@@ -164,7 +176,8 @@ class SumoSensorsGame:
         pygame.display.flip()
 
     def draw_replay(self):
-        self.scr.fill((245,245,245))
+        """Dibuja el modo de repetición de una partida grabada."""
+        self.scr.fill(C.BG_C)
         self._ring()
         fr = self.rec.frames[self.replay_idx]
         p1 = (fr["p1x"], fr["p1y"])
@@ -216,15 +229,18 @@ class SumoSensorsGame:
                     else:
                         self.opponent.update(keys, dt)
                     self.player.push_apart(self.opponent)
-
+                    # sensores
+                    self.player.update_ir()
+                    self.opponent.update_ir()
                     self.player.launch_ping(now, self.opponent)
                     self.opponent.launch_ping(now, self.player)
                     self.player.update_ping(dt)
                     self.opponent.update_ping(dt)
 
-                    if not U.within_ring_with_radius(self.player.pos):
+                    # KO por línea blanca
+                    if U.on_white_line(self.player.pos) or not U.within_ring_with_radius(self.player.pos):
                         self.winner = "CPU" if not self.two_players else "JUGADOR 2"
-                    if not U.within_ring_with_radius(self.opponent.pos):
+                    if U.on_white_line(self.opponent.pos) or not U.within_ring_with_radius(self.opponent.pos):
                         self.winner = "JUGADOR" if not self.two_players else "JUGADOR 1"
                     if self.winner:
                         self.game_over=True
