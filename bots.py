@@ -266,18 +266,23 @@ class CpuBot(Bot):
 
         elif self.state == "move":
             # avanza unos pasos y se detiene; si detecta el borde, retrocede
-            self.update_ir()
-            if self.ir_colour == "blanco":
-                # el sensor ha encontrado el borde: gira 180° y reinicia paso
-                self.heading_deg = (self.heading_deg + 180) % 360
-                self.move_time = 0
-
             vx, vy = U.unit_vec(self.heading_deg)
             self.vel = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
             if self.vel.length() > C.MAX_SPEED:
                 self.vel.scale_to_length(C.MAX_SPEED)
-            self.apply_damping(dt_ms); self.integrate(dt_ms)
-            self.record_accel(dt_ms); self.record_ang_vel(dt_ms)
+            self.apply_damping(dt_ms)
+
+            prev_pos = self.pos.copy()
+            self.integrate(dt_ms)
+            self.update_ir()
+            if self.ir_colour == "blanco":
+                # el sensor ha encontrado el borde: retrocede y reinicia paso
+                self.pos = prev_pos
+                self.heading_deg = (self.heading_deg + 180) % 360
+                self.move_time = 0
+
+            self.record_accel(dt_ms)
+            self.record_ang_vel(dt_ms)
 
             self.move_time += dt_ms
             if self.move_time >= 500:
