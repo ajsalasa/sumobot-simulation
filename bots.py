@@ -215,42 +215,82 @@ class Player2Bot(Bot):
         self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
 
 class CpuBot(Bot):
-    """Bot controlado por IA que busca al oponente mediante un radar FOV."""
+    """Bot controlado por IA menos preciso que barre con ultrasonidos."""
 
-    def _scan_angle(self, target_pos):
-        """Barre varios ángulos y devuelve el más cercano al objetivo."""
-        N, half = 7, C.FOV_DEG/2
-        best_d = best_deg = None
-        for i in range(N):
-            rel = -half + i * (C.FOV_DEG/(N-1))
-            deg = (self.heading_deg + rel) % 360
-            dv  = U.unit_vec(deg)
-            d   = U.ray_disc((self.pos.x, self.pos.y), dv, target_pos, C.BOT_RADIUS)
-            if d is not None and d <= C.MAX_RANGE_PX:
-                if best_d is None or d < best_d:
-                    best_d, best_deg = d, deg
-        return best_deg
+    def __init__(self, pos, colour):
+        super().__init__(pos, colour)
+        self.state = "scan"
+        self.scan_rot = 0.0
+        self.move_time = 0
 
     def update(self, target_bot, dt_ms):
-        """Actualiza la IA orientándola hacia ``target_bot``."""
-        scan = self._scan_angle((target_bot.pos.x, target_bot.pos.y))
-        target_deg = scan if scan is not None else \
-            math.degrees(math.atan2(target_bot.pos.y - self.pos.y,target_bot.pos.x - self.pos.x)) % 360
+        """IA basada en estados: escaneo, movimiento y persecución."""
+        now_ms = pygame.time.get_ticks()
 
-        diff = (target_deg - self.heading_deg + 540) % 360 - 180
-        if abs(diff) > C.CPU_TURN:
-            self.heading_deg = (self.heading_deg +
-                                C.CPU_TURN*(1 if diff>0 else -1)) % 360
-        else:
-            self.heading_deg = target_deg
-        self.record_ang_vel(dt_ms)
+        if self.state == "scan":
+            # gira sobre su eje lanzando pings y sin desplazarse
+            turn = C.CPU_TURN * (dt_ms / 16.6667)
+            self.heading_deg = (self.heading_deg + turn) % 360
+            self.record_ang_vel(dt_ms)
+            self.vel.xy = (0.0, 0.0)
+            self.launch_ping(now_ms, target_bot)
+            self.update_ping(dt_ms)
 
-        vx, vy = U.unit_vec(self.heading_deg)
-        desired = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
-        self.vel = self.vel.lerp(desired, 0.25)
-        if self.vel.length() > C.MAX_SPEED:
-            self.vel.scale_to_length(C.MAX_SPEED)
-        self.apply_damping(dt_ms); self.integrate(dt_ms); self.record_accel(dt_ms)
+            # detección básica dentro del campo de visión del sonar
+            dx = target_bot.pos.x - self.pos.x
+            dy = target_bot.pos.y - self.pos.y
+            dist = math.hypot(dx, dy)
+            if dist <= C.MAX_RANGE_PX:
+                ang_to = math.degrees(math.atan2(dy, dx)) % 360
+                diff = (ang_to - self.heading_deg + 540) % 360 - 180
+                if abs(diff) <= C.FOV_DEG / 2:
+                    self.state = "pursue"
+                    self.heading_deg = ang_to
+                    self.scan_rot = 0
+                    self.record_accel(dt_ms)
+                    return
+
+            self.scan_rot += abs(turn)
+            self.record_accel(dt_ms)
+            if self.scan_rot >= 360:
+                self.state = "move"
+                self.move_time = 0
+                self.scan_rot = 0
+                self.heading_deg = random.uniform(0, 360)
+
+        elif self.state == "move":
+            # avanza recto durante un breve periodo antes de volver a escanear
+            vx, vy = U.unit_vec(self.heading_deg)
+            self.vel = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
+            if self.vel.length() > C.MAX_SPEED:
+                self.vel.scale_to_length(C.MAX_SPEED)
+            self.apply_damping(dt_ms); self.integrate(dt_ms)
+            self.record_accel(dt_ms); self.record_ang_vel(dt_ms)
+            self.move_time += dt_ms
+            if self.move_time >= 1000:
+                self.state = "scan"
+                self.vel.xy = (0.0, 0.0)
+
+        elif self.state == "pursue":
+            # se desplaza hacia delante con rumbo fijo
+            vx, vy = U.unit_vec(self.heading_deg)
+            self.vel = Vector2(vx*C.CPU_SPEED, vy*C.CPU_SPEED)
+            if self.vel.length() > C.MAX_SPEED:
+                self.vel.scale_to_length(C.MAX_SPEED)
+            self.apply_damping(dt_ms); self.integrate(dt_ms)
+            self.record_accel(dt_ms); self.record_ang_vel(dt_ms)
+            self.launch_ping(now_ms, target_bot)
+            self.update_ping(dt_ms)
+
+            dx = target_bot.pos.x - self.pos.x
+            dy = target_bot.pos.y - self.pos.y
+            dist = math.hypot(dx, dy)
+            ang_to = math.degrees(math.atan2(dy, dx)) % 360
+            diff = (ang_to - self.heading_deg + 540) % 360 - 180
+            if dist > C.MAX_RANGE_PX or abs(diff) > C.FOV_DEG / 2:
+                self.state = "scan"
+                self.vel.xy = (0.0, 0.0)
+
         if self.detectar_Empuje():
             print("[CPUBot] Empujón Detectado, reposicionado...")
             self.heading_deg = (self.heading_deg + 90) % 360

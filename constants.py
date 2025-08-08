@@ -36,7 +36,8 @@ TIME_SCALE          = 0.5
 FOV_DEG        = 24
 CREST_GAP_PX   = 35
 PING_PERIOD_MS = 700
-MAX_RANGE_PX   = DOJO_RADIUS + 40
+# alcance máximo del sensor ultrasónico (≃30 cm)
+MAX_RANGE_PX   = int(30 * PX_PER_CM)
 PING_NOISE_PX  = 0
 PING_NOISE_RANGE = (0, 40)
 
