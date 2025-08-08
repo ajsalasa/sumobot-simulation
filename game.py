@@ -50,6 +50,10 @@ class SumoSensorsGame:
         pygame.draw.circle(self.scr, C.RING_FILL, C.CENTER, C.DOJO_RADIUS)
         pygame.draw.circle(self.scr, C.CENTER_MARK_C, C.CENTER, C.CENTER_MARK_RADIUS)
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
+        outer_radius = (C.DOJO_RADIUS + C.RING_EDGE +
+                        C.OUTER_RING_GAP + C.OUTER_RING_EDGE)
+        pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER,
+                           outer_radius, C.OUTER_RING_EDGE)
 
     def _draw_bot(self, bot):
         pygame.draw.circle(self.scr, bot.colour, (int(bot.pos.x), int(bot.pos.y)), C.BOT_RADIUS)
