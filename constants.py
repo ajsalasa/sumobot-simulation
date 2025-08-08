@@ -12,6 +12,7 @@ SCREEN_W, SCREEN_H = 900, 700
 CENTER = (SCREEN_W // 2, SCREEN_H // 2)
 DOJO_RADIUS = int(40 * PX_PER_CM)        # 80 cm de diámetro → 40 cm de radio
 RING_EDGE   = int(5 * PX_PER_CM)         # grosor borde blanco (5 cm)
+OUTER_RING_WIDTH = int(7 * PX_PER_CM)    # grosor del área negra exterior (7 cm)
 CENTER_MARK_RADIUS = int(5 * PX_PER_CM)  # radio del círculo azul central (5 cm)
 BOT_RADIUS  = 18                 # px
 
@@ -43,8 +44,6 @@ G_MSS = 9.81
 
 
 GREY_BG   = (225, 225, 225)
-RING_FILL = ( 20,  20,  20)
-RING_EDGE_C = (255, 255, 255)
 
 # ── Sensor infrarrojo ────────────────────────────────────────────
 IR_POWER     = 1000.0             # potencia emitida (unidad arb.)
@@ -55,8 +54,8 @@ IR_SENSOR_HEIGHT_CM = 2.0         # altura fija del sensor sobre el suelo
 
 
 # ── Colores (RGB) ───────────────────────────────────────────────
-BG_C         = (  0,   0,   0)
-RING_FILL    = BG_C
+BG_C         = GREY_BG
+RING_FILL    = (  0,   0,   0)
 RING_EDGE_C  = (255, 255, 255)
 CENTER_MARK_C= (  0,   0, 255)
 
