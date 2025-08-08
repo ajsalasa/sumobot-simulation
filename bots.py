@@ -229,22 +229,35 @@ class CpuBot(Bot):
 
         if self.state == "scan":
             # gira sobre su eje lanzando pings y sin desplazarse
-            self.heading_deg = (self.heading_deg + C.CPU_TURN) % 360
+            turn = C.CPU_TURN * (dt_ms / 16.6667)
+            self.heading_deg = (self.heading_deg + turn) % 360
+
             self.record_ang_vel(dt_ms)
             self.vel.xy = (0.0, 0.0)
             self.launch_ping(now_ms, target_bot)
             self.update_ping(dt_ms)
-            _, real, _, src = self._compute_ping_hit(target_bot, noisy=True)
-            if src == "bot" and real <= C.MAX_RANGE_PX:
-                self.state = "pursue"
-            else:
-                self.scan_rot += C.CPU_TURN
-                self.record_accel(dt_ms)
-                if self.scan_rot >= 360:
-                    self.state = "move"
-                    self.move_time = 0
+            # detección básica dentro del campo de visión del sonar
+            dx = target_bot.pos.x - self.pos.x
+            dy = target_bot.pos.y - self.pos.y
+            dist = math.hypot(dx, dy)
+            if dist <= C.MAX_RANGE_PX:
+                ang_to = math.degrees(math.atan2(dy, dx)) % 360
+                diff = (ang_to - self.heading_deg + 540) % 360 - 180
+                if abs(diff) <= C.FOV_DEG / 2:
+                    self.state = "pursue"
+                    self.heading_deg = ang_to
                     self.scan_rot = 0
-                    self.heading_deg = random.uniform(0, 360)
+                    self.record_accel(dt_ms)
+                    return
+
+            self.scan_rot += abs(turn)
+            self.record_accel(dt_ms)
+            if self.scan_rot >= 360:
+                self.state = "move"
+                self.move_time = 0
+                self.scan_rot = 0
+                self.heading_deg = random.uniform(0, 360)
+
 
         elif self.state == "move":
             # avanza recto durante un breve periodo antes de volver a escanear
@@ -269,8 +282,15 @@ class CpuBot(Bot):
             self.record_accel(dt_ms); self.record_ang_vel(dt_ms)
             self.launch_ping(now_ms, target_bot)
             self.update_ping(dt_ms)
-            _, real, _, src = self._compute_ping_hit(target_bot, noisy=True)
-            if src != "bot" or real > C.MAX_RANGE_PX:
+
+
+            dx = target_bot.pos.x - self.pos.x
+            dy = target_bot.pos.y - self.pos.y
+            dist = math.hypot(dx, dy)
+            ang_to = math.degrees(math.atan2(dy, dx)) % 360
+            diff = (ang_to - self.heading_deg + 540) % 360 - 180
+            if dist > C.MAX_RANGE_PX or abs(diff) > C.FOV_DEG / 2:
+
                 self.state = "scan"
                 self.vel.xy = (0.0, 0.0)
 
