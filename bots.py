@@ -247,6 +247,7 @@ class CpuBot(Bot):
                     self.state = "pursue"
                     self.heading_deg = ang_to
                     self.scan_rot = 0
+                    self.record_ang_vel(0)
                     self.record_accel(dt_ms)
                     return
 
