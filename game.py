@@ -238,10 +238,10 @@ class SumoSensorsGame:
                     self.player.update_ping(dt)
                     self.opponent.update_ping(dt)
 
-                    # KO por línea blanca
-                    if U.on_white_line(self.player.pos) or not U.within_ring_with_radius(self.player.pos):
+                    # KO cuando un bot abandona el dojo
+                    if not U.within_ring_with_radius(self.player.pos):
                         self.winner = "CPU" if not self.two_players else "JUGADOR 2"
-                    if U.on_white_line(self.opponent.pos) or not U.within_ring_with_radius(self.opponent.pos):
+                    if not U.within_ring_with_radius(self.opponent.pos):
                         self.winner = "JUGADOR" if not self.two_players else "JUGADOR 1"
                     if self.winner:
                         self.game_over=True
