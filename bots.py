@@ -262,6 +262,7 @@ class CpuBot(Bot):
                 # elige un desplazamiento discreto (adelante, atrás, izquierda o derecha)
                 self.heading_deg = (self.heading_deg +
                                      random.choice((0, 90, 180, -90))) % 360
+                self.record_ang_vel(0)
 
 
         elif self.state == "move":
