@@ -262,6 +262,7 @@ class CpuBot(Bot):
                 # elige un desplazamiento discreto (adelante, atrás, izquierda o derecha)
                 self.heading_deg = (self.heading_deg +
                                      random.choice((0, 90, 180, -90))) % 360
+                self.record_ang_vel(0)
 
 
         elif self.state == "move":
@@ -272,6 +273,7 @@ class CpuBot(Bot):
                 self.vel.scale_to_length(C.MAX_SPEED)
             self.apply_damping(dt_ms)
 
+            self.record_ang_vel(dt_ms)
             prev_pos = self.pos.copy()
             self.integrate(dt_ms)
             self.update_ir()
@@ -279,10 +281,10 @@ class CpuBot(Bot):
                 # el sensor ha encontrado el borde: retrocede y reinicia paso
                 self.pos = prev_pos
                 self.heading_deg = (self.heading_deg + 180) % 360
+                self.record_ang_vel(0)
                 self.move_time = 0
 
             self.record_accel(dt_ms)
-            self.record_ang_vel(dt_ms)
 
             self.move_time += dt_ms
             if self.move_time >= 500:
@@ -314,3 +316,4 @@ class CpuBot(Bot):
         if self.detectar_Empuje():
             print("[CPUBot] Empujón Detectado, reposicionado...")
             self.heading_deg = (self.heading_deg + 90) % 360
+            self.record_ang_vel(0)
