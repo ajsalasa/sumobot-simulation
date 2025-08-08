@@ -21,6 +21,16 @@ def within_ring_with_radius(pos):
     """¿El centro del bot (con radio) sigue dentro del dojo?"""
     return dist_to_center(pos) <= (C.DOJO_RADIUS - C.BOT_RADIUS)
 
+def on_white_line(pos):
+    """¿El sensor infrarrojo detecta la línea blanca del borde?"""
+    d = dist_to_center(pos)
+    half = C.RING_EDGE / 2
+    return (C.DOJO_RADIUS - half) <= d <= (C.DOJO_RADIUS + half)
+
+def on_blue_center(pos):
+    """¿El sensor está sobre el círculo azul central?"""
+    return dist_to_center(pos) <= C.CENTER_MARK_RADIUS
+
 # ── Amortiguación dependiente de dt ────────────────────────────
 def damping_factor(dt_ms: float):
     """Factor de amortiguación para un intervalo ``dt_ms``."""

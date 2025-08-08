@@ -4,15 +4,18 @@ Se mantienen aquí para que todo el proyecto comparta la misma “fuente de verd
 """
 import math
 
+# ── Escala real/virtual ──────────────────────────────────────────
+PX_PER_CM      = 4                       # 1 cm → 4 px
+
 # ── Geometría pantalla / dojo ────────────────────────────────────
 SCREEN_W, SCREEN_H = 900, 700
 CENTER = (SCREEN_W // 2, SCREEN_H // 2)
-DOJO_RADIUS = 280        # px
-RING_EDGE   = 6          # grosor borde blanco
-BOT_RADIUS  = 18         # px
+DOJO_RADIUS = int(40 * PX_PER_CM)        # 80 cm de diámetro → 40 cm de radio
+RING_EDGE   = int(5 * PX_PER_CM)         # grosor borde blanco (5 cm)
+CENTER_MARK_RADIUS = int(5 * PX_PER_CM)  # radio del círculo azul central (5 cm)
+BOT_RADIUS  = 18                 # px
 
-# ── Escala real/virtual y sonido ─────────────────────────────────
-PX_PER_CM      = 4                       # 1 cm → 4 px
+# ── Escala de sonido ─────────────────────────────────────────────
 V_SOUND_CMMS   = 34.3                    # velocidad sonido (cm ms-1)
 WAVE_SPEED_PX_MS = (V_SOUND_CMMS / 100) * PX_PER_CM   # ≃ 1.37 px ms-1
 
@@ -38,10 +41,18 @@ PING_NOISE_RANGE = (0, 40)
 ACCEL_DISPLAY_MS = 600
 G_MSS = 9.81
 
+# ── Sensor infrarrojo ────────────────────────────────────────────
+IR_POWER     = 1000.0             # potencia emitida (unidad arb.)
+IR_RHO_WHITE = 0.9                # reflectividad (blanco)
+IR_RHO_BLACK = 0.2                # reflectividad (negro)
+IR_RHO_BLUE  = 0.5                # reflectividad (azul)
+IR_SENSOR_HEIGHT_CM = 2.0         # altura fija del sensor sobre el suelo
+
 # ── Colores (RGB) ───────────────────────────────────────────────
-GREY_BG   = (225, 225, 225)
-RING_FILL = ( 20,  20,  20)
-RING_EDGE_C = (255, 255, 255)
+BG_C         = (  0,   0,   0)
+RING_FILL    = BG_C
+RING_EDGE_C  = (255, 255, 255)
+CENTER_MARK_C= (  0,   0, 255)
 
 PLAYER_C = ( 80, 160, 255)
 CPU_C    = (255,  60, 180)
