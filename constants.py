@@ -12,6 +12,7 @@ SCREEN_W, SCREEN_H = 900, 700
 CENTER = (SCREEN_W // 2, SCREEN_H // 2)
 DOJO_RADIUS = int(40 * PX_PER_CM)        # 80 cm de diámetro → 40 cm de radio
 RING_EDGE   = int(5 * PX_PER_CM)         # grosor borde blanco (5 cm)
+OUTER_RING_WIDTH = int(7 * PX_PER_CM)    # grosor del área negra exterior (7 cm)
 OUTER_RING_GAP  = int(5 * PX_PER_CM)     # separación negra entre doyo y anillo externo (5 cm)
 OUTER_RING_EDGE = int(2 * PX_PER_CM)     # grosor del anillo externo (2 cm)
 CENTER_MARK_RADIUS = int(5 * PX_PER_CM)  # radio del círculo azul central (5 cm)
@@ -56,7 +57,7 @@ IR_SENSOR_HEIGHT_CM = 2.0         # altura fija del sensor sobre el suelo
 
 # ── Colores (RGB) ───────────────────────────────────────────────
 BG_C         = GREY_BG
-RING_FILL    = ( 20,  20,  20)
+RING_FILL    = (  0,   0,   0)
 RING_EDGE_C  = (255, 255, 255)
 CENTER_MARK_C= (  0,   0, 255)
 
