@@ -13,6 +13,8 @@ CENTER = (SCREEN_W // 2, SCREEN_H // 2)
 DOJO_RADIUS = int(40 * PX_PER_CM)        # 80 cm de diámetro → 40 cm de radio
 RING_EDGE   = int(5 * PX_PER_CM)         # grosor borde blanco (5 cm)
 OUTER_RING_WIDTH = int(7 * PX_PER_CM)    # grosor del área negra exterior (7 cm)
+OUTER_RING_GAP  = int(5 * PX_PER_CM)     # separación negra entre doyo y anillo externo (5 cm)
+OUTER_RING_EDGE = int(2 * PX_PER_CM)     # grosor del anillo externo (2 cm)
 CENTER_MARK_RADIUS = int(5 * PX_PER_CM)  # radio del círculo azul central (5 cm)
 BOT_RADIUS  = 18                 # px
 
