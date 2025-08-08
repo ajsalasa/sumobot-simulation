@@ -16,18 +16,24 @@ class SumoSensorsGame:
         self.scr   = pygame.display.set_mode((C.SCREEN_W, C.SCREEN_H))
         pygame.display.set_caption("Sumo-Sensors (modular)")
         self.clock = pygame.time.Clock()
-        self.two_players = False
+        self.mode = "player_cpu"  # modos: player_cpu, two_players, cpu_cpu
         self.replay_mode = False
         self.rec   = Recorder()
         self.reset()
 
     def reset(self):
-        self.player = B.PlayerBot((C.CENTER[0]-120, C.CENTER[1]), C.PLAYER_C)
+        if self.mode == "player_cpu":
+            self.player = B.PlayerBot((C.CENTER[0]-120, C.CENTER[1]), C.PLAYER_C)
+            self.opponent = B.CpuBot((C.CENTER[0]+120, C.CENTER[1]), C.CPU_C)
+        elif self.mode == "two_players":
+            self.player = B.PlayerBot((C.CENTER[0]-120, C.CENTER[1]), C.PLAYER_C)
+            self.opponent = B.Player2Bot((C.CENTER[0]+120, C.CENTER[1]), C.P2_C)
+        else:  # cpu_cpu
+            self.player = B.CpuBot((C.CENTER[0]-120, C.CENTER[1]), C.CPU_C)
+            self.opponent = B.CpuBot((C.CENTER[0]+120, C.CENTER[1]), C.P2_C)
+
         self.player.heading_deg = 0
         self.player.prev_heading = 0
-        self.opponent = (B.Player2Bot if self.two_players else B.CpuBot)(
-            (C.CENTER[0]+120, C.CENTER[1]),
-            C.P2_C if self.two_players else C.CPU_C)
         self.opponent.heading_deg = 180
         self.opponent.prev_heading = 180
         self.game_over = False
@@ -37,9 +43,9 @@ class SumoSensorsGame:
         self.rec.frames.clear()
         self.player.update_ir()
         self.opponent.update_ir()
-
-    def toggle_two_players(self):
-        self.two_players = not self.two_players
+    def cycle_mode(self):
+        modes = ["player_cpu", "two_players", "cpu_cpu"]
+        self.mode = modes[(modes.index(self.mode) + 1) % len(modes)]
         self.reset()
 
     def start_replay(self):
@@ -167,7 +173,7 @@ class SumoSensorsGame:
         self._draw_hud(self.player, self.opponent, align_left=True)
         self._draw_hud(self.opponent, self.player, align_left=False)
 
-        help1 = "ESC salir  |  R reiniciar  |  TAB CPU/2P  |  T replay  |  C CSV"
+        help1 = "ESC salir  |  R reiniciar  |  TAB modo  |  T replay  |  C CSV"
         self.scr.blit(SMALL.render(help1, True, C.TXT_C), (10, C.SCREEN_H-40))
 
         if self.game_over:
@@ -183,10 +189,14 @@ class SumoSensorsGame:
         fr = self.rec.frames[self.replay_idx]
         p1 = (fr["p1x"], fr["p1y"])
         p2 = (fr["p2x"], fr["p2y"])
-        pygame.draw.circle(self.scr, C.PLAYER_C, p1, C.BOT_RADIUS)
-        pygame.draw.circle(self.scr,
-                           C.P2_C if self.two_players else C.CPU_C,
-                           p2, C.BOT_RADIUS)
+        if self.mode == "player_cpu":
+            p1_col, p2_col = C.PLAYER_C, C.CPU_C
+        elif self.mode == "two_players":
+            p1_col, p2_col = C.PLAYER_C, C.P2_C
+        else:
+            p1_col, p2_col = C.CPU_C, C.P2_C
+        pygame.draw.circle(self.scr, p1_col, p1, C.BOT_RADIUS)
+        pygame.draw.circle(self.scr, p2_col, p2, C.BOT_RADIUS)
         total = len(self.rec.frames)
         if total:
             prog = self.replay_idx / (total - 1) if total > 1 else 0
@@ -215,7 +225,7 @@ class SumoSensorsGame:
                     if e.key==pygame.K_r:
                         self.reset()
                     if e.key==pygame.K_TAB:
-                        self.toggle_two_players()
+                        self.cycle_mode()
                     if e.key==pygame.K_t:
                         self.start_replay() if not self.replay_mode else setattr(self,"replay_mode",False)
                     if e.key==pygame.K_c:
@@ -224,7 +234,10 @@ class SumoSensorsGame:
             if not self.replay_mode:
                 if not self.game_over:
                     keys = pygame.key.get_pressed()
-                    self.player.update(keys, dt)
+                    if isinstance(self.player, B.CpuBot):
+                        self.player.update(self.opponent, dt)
+                    else:
+                        self.player.update(keys, dt)
                     if isinstance(self.opponent, B.CpuBot):
                         self.opponent.update(self.player, dt)
                     else:
@@ -240,9 +253,19 @@ class SumoSensorsGame:
 
                     # KO cuando un bot abandona el dojo
                     if not U.within_ring_with_radius(self.player.pos):
-                        self.winner = "CPU" if not self.two_players else "JUGADOR 2"
+                        if self.mode == "player_cpu":
+                            self.winner = "CPU"
+                        elif self.mode == "two_players":
+                            self.winner = "JUGADOR 2"
+                        else:
+                            self.winner = "CPU 2"
                     if not U.within_ring_with_radius(self.opponent.pos):
-                        self.winner = "JUGADOR" if not self.two_players else "JUGADOR 1"
+                        if self.mode == "player_cpu":
+                            self.winner = "JUGADOR"
+                        elif self.mode == "two_players":
+                            self.winner = "JUGADOR 1"
+                        else:
+                            self.winner = "CPU 1"
                     if self.winner:
                         self.game_over=True
 
