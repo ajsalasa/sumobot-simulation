@@ -277,8 +277,8 @@ class CpuBot(Bot):
             prev_pos = self.pos.copy()
             self.integrate(dt_ms)
             self.update_ir()
-            if self.ir_colour == "blanco":
-                # el sensor ha encontrado el borde: retrocede y reinicia paso
+            if self.ir_colour == "blanco" or not U.within_ring_with_radius(self.pos):
+                # el sensor ha encontrado el borde o se salió del dojo: retrocede y reinicia paso
                 self.pos = prev_pos
                 self.heading_deg = (self.heading_deg + 180) % 360
                 self.record_ang_vel(0)
@@ -303,8 +303,8 @@ class CpuBot(Bot):
             prev_pos = self.pos.copy()
             self.integrate(dt_ms)
             self.update_ir()
-            if self.ir_colour == "blanco":
-                # si detecta el borde, retrocede y vuelve a escanear
+            if self.ir_colour == "blanco" or not U.within_ring_with_radius(self.pos):
+                # si detecta el borde o se salió del dojo, retrocede y vuelve a escanear
                 self.pos = prev_pos
                 self.heading_deg = (self.heading_deg + 180) % 360
                 self.record_ang_vel(0)
