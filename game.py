@@ -1,4 +1,5 @@
 import sys, pygame
+from pygame import gfxdraw
 import constants as C
 import utils as U
 import bots as B
@@ -16,6 +17,7 @@ class SumoSensorsGame:
         self.scr   = pygame.display.set_mode((C.SCREEN_W, C.SCREEN_H))
         pygame.display.set_caption("Sumo-Sensors (modular)")
         self.clock = pygame.time.Clock()
+        self.background = self._make_background()
         self.mode = "player_cpu"  # modos: player_cpu, two_players, cpu_cpu
         self.replay_mode = False
         self.rec   = Recorder()
@@ -52,14 +54,30 @@ class SumoSensorsGame:
         self.replay_mode = bool(self.rec.frames)
         self.replay_idx = 0
 
+    def _make_background(self):
+        surf = pygame.Surface((C.SCREEN_W, C.SCREEN_H))
+        top, bottom = C.BG_TOP_C, C.BG_BOTTOM_C
+        for y in range(C.SCREEN_H):
+            ratio = y / C.SCREEN_H
+            r = int(top[0] * (1 - ratio) + bottom[0] * ratio)
+            g = int(top[1] * (1 - ratio) + bottom[1] * ratio)
+            b = int(top[2] * (1 - ratio) + bottom[2] * ratio)
+            pygame.draw.line(surf, (r, g, b), (0, y), (C.SCREEN_W, y))
+        return surf
+
     def _ring(self):
         outer_radius = C.DOJO_RADIUS + C.RING_EDGE + C.OUTER_RING_WIDTH
-        pygame.draw.circle(self.scr, C.RING_FILL, C.CENTER, outer_radius)
+        gfxdraw.filled_circle(self.scr, C.CENTER[0], C.CENTER[1], outer_radius, C.RING_FILL)
+        gfxdraw.aacircle(self.scr, C.CENTER[0], C.CENTER[1], outer_radius, C.RING_FILL)
         pygame.draw.circle(self.scr, C.RING_EDGE_C, C.CENTER, C.DOJO_RADIUS, C.RING_EDGE)
-        pygame.draw.circle(self.scr, C.CENTER_MARK_C, C.CENTER, C.CENTER_MARK_RADIUS)
+        gfxdraw.aacircle(self.scr, C.CENTER[0], C.CENTER[1], C.DOJO_RADIUS, C.RING_EDGE_C)
+        gfxdraw.filled_circle(self.scr, C.CENTER[0], C.CENTER[1], C.CENTER_MARK_RADIUS, C.CENTER_MARK_C)
+        gfxdraw.aacircle(self.scr, C.CENTER[0], C.CENTER[1], C.CENTER_MARK_RADIUS, C.CENTER_MARK_C)
 
     def _draw_bot(self, bot):
-        pygame.draw.circle(self.scr, bot.colour, (int(bot.pos.x), int(bot.pos.y)), C.BOT_RADIUS)
+        x, y = int(bot.pos.x), int(bot.pos.y)
+        gfxdraw.filled_circle(self.scr, x, y, C.BOT_RADIUS, bot.colour)
+        gfxdraw.aacircle(self.scr, x, y, C.BOT_RADIUS, C.BOT_BORDER_C)
         vx, vy = U.unit_vec(bot.heading_deg)
         tip = (bot.pos.x + vx*C.BOT_RADIUS, bot.pos.y + vy*C.BOT_RADIUS)
         pygame.draw.line(self.scr, (255,255,255), bot.pos, tip, 2)
@@ -166,7 +184,7 @@ class SumoSensorsGame:
 
     def draw_game(self, now):
         """Renderiza el estado del juego durante una partida normal."""
-        self.scr.fill(C.BG_C)
+        self.scr.blit(self.background, (0,0))
 
         self._ring()
         for b in (self.player, self.opponent):
@@ -187,7 +205,7 @@ class SumoSensorsGame:
 
     def draw_replay(self):
         """Dibuja el modo de repetición de una partida grabada."""
-        self.scr.fill(C.BG_C)
+        self.scr.blit(self.background, (0,0))
         self._ring()
         fr = self.rec.frames[self.replay_idx]
         p1 = (fr["p1x"], fr["p1y"])
@@ -198,8 +216,10 @@ class SumoSensorsGame:
             p1_col, p2_col = C.PLAYER_C, C.P2_C
         else:
             p1_col, p2_col = C.CPU_C, C.P2_C
-        pygame.draw.circle(self.scr, p1_col, p1, C.BOT_RADIUS)
-        pygame.draw.circle(self.scr, p2_col, p2, C.BOT_RADIUS)
+        gfxdraw.filled_circle(self.scr, int(p1[0]), int(p1[1]), C.BOT_RADIUS, p1_col)
+        gfxdraw.aacircle(self.scr, int(p1[0]), int(p1[1]), C.BOT_RADIUS, C.BOT_BORDER_C)
+        gfxdraw.filled_circle(self.scr, int(p2[0]), int(p2[1]), C.BOT_RADIUS, p2_col)
+        gfxdraw.aacircle(self.scr, int(p2[0]), int(p2[1]), C.BOT_RADIUS, C.BOT_BORDER_C)
         total = len(self.rec.frames)
         if total:
             prog = self.replay_idx / (total - 1) if total > 1 else 0
@@ -283,3 +303,4 @@ class SumoSensorsGame:
 
         pygame.quit()
         sys.exit()
+

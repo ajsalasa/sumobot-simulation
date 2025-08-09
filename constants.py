@@ -77,4 +77,10 @@ IMPACT_C = (255,  90,  90)
 ACCEL_VEC_C = (255, 210,   0)
 TXT_C    = (  0,   0,   0)
 
+# ── Colores mejorados ────────────────────────────────────────────
+BG_TOP_C    = (250, 250, 250)
+BG_BOTTOM_C = (200, 200, 200)
+BOT_BORDER_C = ( 20,  20,  20)
+
 TAU = math.tau
+
