@@ -242,6 +242,7 @@ class SumoSensorsGame:
                         self.opponent.update(self.player, dt)
                     else:
                         self.opponent.update(keys, dt)
+                    bots_touching = self.player.pos.distance_to(self.opponent.pos) <= C.BOT_RADIUS * 2
                     self.player.push_apart(self.opponent)
                     # sensores
                     self.player.update_ir()
@@ -251,15 +252,15 @@ class SumoSensorsGame:
                     self.player.update_ping(dt)
                     self.opponent.update_ping(dt)
 
-                    # KO cuando un bot abandona el dojo
-                    if not U.within_ring_with_radius(self.player.pos):
+                    # KO cuando un bot abandona el dojo mientras es empujado
+                    if not U.within_ring_with_radius(self.player.pos) and bots_touching:
                         if self.mode == "player_cpu":
                             self.winner = "CPU"
                         elif self.mode == "two_players":
                             self.winner = "JUGADOR 2"
                         else:
                             self.winner = "CPU 2"
-                    if not U.within_ring_with_radius(self.opponent.pos):
+                    if not U.within_ring_with_radius(self.opponent.pos) and bots_touching:
                         if self.mode == "player_cpu":
                             self.winner = "JUGADOR"
                         elif self.mode == "two_players":
