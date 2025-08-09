@@ -123,6 +123,9 @@ class SumoSensorsGame:
             label_pos = (bot.pos.x + nx*length, bot.pos.y + ny*length)
 
         lines = [
+            "Batería:",
+            f"{bot.battery:6.2f} %",
+            "",
             "Ultrasonido:",
             "d = (v · t) / 2",
             f"v = {C.V_SOUND_CMMS/100:.0f} m/s",
@@ -139,8 +142,8 @@ class SumoSensorsGame:
             "Velocidad angular:",
             "ω = Δθ / Δt",
             f"ω = {bot.ang_vel:6.2f} °/s",
-            f"ω (giroscopio) = {gyro:6.2f} °/s"
-            "",
+            f"ω (giroscopio) = {gyro:6.2f} °/s",
+            "",  # Espacio extra antes del sensor IR
             "Sensor IR:",
             "I = P · ρ / d²",
             f"d = {C.IR_SENSOR_HEIGHT_CM:6.1f} cm",
