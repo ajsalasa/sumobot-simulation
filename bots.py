@@ -68,11 +68,16 @@ class Bot:
         self.ir_dist_cm   = 0.0
         self.ir_colour    = "negro"
 
+        # Estado de la batería: los robots empiezan con carga alta aleatoria
+        self.battery = random.uniform(C.BATTERY_INITIAL_MIN, 100.0)
+        self.max_battery = 100.0
+
     # ― física ―
     def integrate(self, dt_ms):
         """Integra la velocidad actual para actualizar la posición."""
         self.pos += self.vel * (dt_ms/1000.0)
         self.gyroscope.update(self.ang_vel, dt_ms)
+        self.drain_battery(dt_ms)
 
     def apply_damping(self, dt_ms):
         """Aplica amortiguación proporcional al tiempo transcurrido."""
@@ -84,8 +89,20 @@ class Bot:
         if d and d < C.BOT_RADIUS*2:
             overlap = C.BOT_RADIUS*2 - d
             n = (other.pos - self.pos).normalize()
-            self.pos  -= n * overlap/2
-            other.pos += n * overlap/2
+            # Reparto del empuje según la fuerza (nivel de batería)
+            s1 = 1.0 + (self.battery - C.BATTERY_INITIAL_MIN) / (100.0 - C.BATTERY_INITIAL_MIN)
+            s2 = 1.0 + (other.battery - C.BATTERY_INITIAL_MIN) / (100.0 - C.BATTERY_INITIAL_MIN)
+            total = s1 + s2
+            self_share = s2 / total
+            other_share = s1 / total
+            self.pos  -= n * overlap * self_share
+            other.pos += n * overlap * other_share
+
+    def drain_battery(self, dt_ms):
+        """Consume batería según el tiempo y la velocidad actual."""
+        speed_ratio = self.vel.length() / C.MAX_SPEED if C.MAX_SPEED else 0.0
+        drain = (C.BATTERY_DRAIN_BASE + (speed_ratio ** 2) * C.BATTERY_DRAIN_SPEED)
+        self.battery = max(0.0, self.battery - drain * (dt_ms / 1000.0))
 
     def record_accel(self, dt_ms):
         """Calcula la aceleración a partir de la variación de velocidad."""

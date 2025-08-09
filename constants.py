@@ -32,6 +32,11 @@ CPU_SPEED           = 150.0
 DAMPING_PER_FRAME   = 0.93
 TIME_SCALE          = 0.5
 
+# ── Batería ──────────────────────────────────────────────────────
+BATTERY_INITIAL_MIN = 80.0              # porcentaje mínimo de arranque
+BATTERY_DRAIN_BASE  = 0.005             # % por segundo en reposo
+BATTERY_DRAIN_SPEED = 0.05              # % extra por segundo a máxima velocidad
+
 
 FOV_DEG        = 60
 CREST_GAP_PX   = 35
